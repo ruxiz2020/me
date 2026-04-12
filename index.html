@@ -91,36 +91,63 @@
   header .links a:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
   header .links a svg { width: 14px; height: 14px; }
 
-  .section-head {
-    display: flex; align-items: baseline; justify-content: space-between;
-    margin: 0 2px 18px;
+  /* Category nav */
+  .cat-nav {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 40px;
   }
-  .section-head h2 {
-    margin: 0; font-size: 12px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .12em; color: var(--muted);
-  }
-  .section-head .count { font-size: 12px; color: var(--muted); }
-
-  .filters {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px;
-  }
-  .filter {
-    font-size: 12px; font-weight: 500;
-    padding: 7px 13px; border-radius: 999px;
+  .cat-nav-btn {
+    font-size: 13px; font-weight: 500;
+    padding: 9px 16px; border-radius: 999px;
     background: var(--card);
     border: 1px solid var(--border-2);
     color: var(--fg-2);
     cursor: pointer; user-select: none;
-    transition: all .12s ease;
+    transition: all .15s ease;
+    display: inline-flex; align-items: center; gap: 7px;
   }
-  .filter:hover { border-color: var(--accent); color: var(--fg); }
-  .filter.on {
+  .cat-nav-btn:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
+  .cat-nav-btn.on {
     background: linear-gradient(135deg, var(--accent), #a3431f);
     color: #fff; border-color: transparent;
     box-shadow: 0 4px 14px -6px rgba(200,86,42,.5);
   }
-  .filter .n {
-    margin-left: 6px; font-size: 11px; opacity: .7;
+  .cat-nav-btn .cat-icon { font-size: 15px; line-height: 1; }
+  .cat-nav-btn .n { font-size: 11px; opacity: .7; margin-left: 2px; }
+
+  /* Category sections */
+  .cat-section { margin-bottom: 48px; }
+  .cat-section:last-child { margin-bottom: 0; }
+
+  .cat-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cat-header .cat-emoji {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .cat-header .cat-emoji.life     { background: rgba(79,138,62,.12); }
+  .cat-header .cat-emoji.career   { background: rgba(200,86,42,.12); }
+  .cat-header .cat-emoji.research { background: rgba(88,110,184,.12); }
+  .cat-header .cat-emoji.tools    { background: rgba(212,148,31,.12); }
+  .cat-header .cat-emoji.hobby    { background: rgba(184,88,110,.12); }
+
+  .cat-header .cat-info h2 {
+    margin: 0; font-size: 18px; font-weight: 600;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-weight: 400; letter-spacing: -.01em;
+  }
+  .cat-header .cat-info .cat-desc {
+    font-size: 13px; color: var(--muted); margin-top: 2px;
+  }
+  .cat-header .cat-count {
+    margin-left: auto;
+    font-size: 12px; color: var(--muted);
+    font-family: "JetBrains Mono", monospace;
   }
 
   .grid {
@@ -246,13 +273,8 @@
     <div class="links" id="links"></div>
   </header>
 
-  <div class="section-head">
-    <h2>Projects</h2>
-    <span class="count" id="count"></span>
-  </div>
-
-  <div class="filters" id="filters"></div>
-  <div class="grid" id="grid"></div>
+  <div class="cat-nav" id="catNav"></div>
+  <div id="sections"></div>
 
   <footer>
     Last updated <span id="lastUpdated"></span> · Built with HTML and a coffee.
@@ -274,11 +296,23 @@ const ME = {
   ],
 };
 
-// status options: live · building · idea · paused · archived
+// category options: life · career · research · tools · hobby
+// status options:   live · building · idea · paused · archived
 const PROJECTS = [
+  {
+    name: "Habla Conmigo",
+    url: "https://language-app-262290918107.us-central1.run.app",
+    category: "life",
+    status: "live",
+    description: "Personal Spanish speaking practice powered by daily life. Type a thought in Chinese, get a natural Spanish translation with phrase breakdown, grammar patterns, and explanation — then practice speaking with real-time pronunciation feedback.",
+    stack: ["Python", "FastAPI", "OpenAI", "Whisper", "SQLite", "Cloud Run"],
+    updated: "2026-04-12",
+    next: "Add spaced repetition for pinned phrases, roleplay mode, and multi-language support.",
+  },
   {
     name: "OtherSide",
     url: "https://otherside.earth",
+    category: "research",
     status: "building",
     description: "Multi-language perspective aggregator. Ask any question — it searches across communities in different languages (English, Chinese, Spanish, Arabic, Hindi…), then synthesizes a cited answer in your mother tongue.",
     stack: ["Python", "FastAPI", "OpenAI", "Tavily", "SQLite", "Cloud Run"],
@@ -288,26 +322,19 @@ const PROJECTS = [
   {
     name: "AI Job Builder",
     url: "https://aijobbuilder.net",
+    category: "career",
     status: "live",
-    description: "Turns a job description + your resume into a personalized project you can actually build. Identifies capability gaps, generates three project options (fast-proof / balanced / standout), guides the build milestone-by-milestone, then writes interview narratives grounded in the real artifacts you shipped. Core idea: missing proof, not missing skills.",
+    description: "Turns a job description + your resume into a personalized project you can actually build. Identifies capability gaps, generates three project options (fast-proof / balanced / standout), guides the build milestone-by-milestone, then writes interview narratives grounded in the real artifacts you shipped.",
     stack: ["Python", "Claude", "FastAPI", "CLI"],
     updated: "2026-04-11",
     next: "Polish the web UI, onboard first batch of job-seeker users, iterate on the interview-prep pack.",
   },
   {
-    name: "Habla Conmigo",
-    url: "https://language-app-262290918107.us-central1.run.app",
-    status: "live",
-    description: "Personal Spanish speaking practice powered by daily life. Type a thought in Chinese, get a natural Spanish translation with phrase breakdown, grammar patterns, and explanation — then practice speaking with real-time pronunciation feedback. Designed around speak-first, phrase-over-word learning with gentle one-correction-at-a-time feedback.",
-    stack: ["Python", "FastAPI", "OpenAI", "Whisper", "SQLite", "Cloud Run"],
-    updated: "2026-04-12",
-    next: "Add spaced repetition for pinned phrases, roleplay mode, and multi-language support.",
-  },
-  {
     name: "AI Research Arena",
     url: "https://airesearcharena.org",
+    category: "research",
     status: "live",
-    description: "Collaborative platform for cracking hard open research problems. Users define a problem, propose hypotheses in parallel, and add structured contributions that each declare what was tested, how, what was found, and what it means. Progress accumulates over time via reputation-weighted voting and first-class evidence tracking — unlike Kaggle or forums, exploration is structured and cumulative.",
+    description: "Collaborative platform for cracking hard open research problems. Users define a problem, propose hypotheses in parallel, and add structured contributions that each declare what was tested, how, what was found, and what it means. Progress accumulates over time via reputation-weighted voting and first-class evidence tracking.",
     stack: ["Python", "FastAPI", "SQLAlchemy", "Alembic", "HTMX", "Tailwind"],
     updated: "2026-04-11",
     next: "Ship v1.6, recruit research teams for pilot use, expand evidence-collection pipeline.",
@@ -316,14 +343,23 @@ const PROJECTS = [
 
 // ============================================================
 
+const CATEGORIES = {
+  life:     { label: "Life",     icon: "\u{1F331}", desc: "Personal growth & daily living" },
+  career:   { label: "Career",   icon: "\u{1F4BC}", desc: "Professional tools & job search" },
+  research: { label: "Research", icon: "\u{1F52C}", desc: "Knowledge discovery & exploration" },
+  tools:    { label: "Tools",    icon: "\u{1F527}", desc: "Utilities & developer tools" },
+  hobby:    { label: "Hobby",    icon: "\u{1F3A8}", desc: "Creative & fun side projects" },
+};
+
+const CAT_ORDER = ["life", "career", "research", "tools", "hobby"];
+const STATUS_ORDER = ["live", "building", "idea", "paused", "archived"];
+
 const ICONS = {
   github: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.38.6.1.82-.26.82-.58v-2.05c-3.34.72-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.1-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.08 1.83 2.82 1.3 3.5.99.11-.77.42-1.3.76-1.6-2.66-.3-5.47-1.33-5.47-5.9 0-1.3.47-2.37 1.23-3.2-.12-.3-.53-1.52.11-3.17 0 0 1-.32 3.3 1.22a11.5 11.5 0 0 1 6 0c2.3-1.54 3.3-1.22 3.3-1.22.66 1.65.24 2.87.12 3.17.77.83 1.23 1.9 1.23 3.2 0 4.58-2.81 5.6-5.49 5.9.43.37.81 1.1.81 2.22v3.3c0 .32.22.69.83.57A12 12 0 0 0 24 12.5C24 5.87 18.63.5 12 .5z"/></svg>`,
   book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
   mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>`,
   external: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>`,
 };
-
-const ORDER = ["live", "building", "idea", "paused", "archived"];
 
 function escapeHtml(s) {
   const d = document.createElement("div");
@@ -338,73 +374,118 @@ function renderLinks() {
     .join("");
 }
 
-function renderFilters(active, counts) {
-  const el = document.getElementById("filters");
-  const total = Object.values(counts).reduce((a, b) => a + b, 0);
-  const all = [{key: "all", label: "All", count: total}].concat(
-    ORDER.filter(s => counts[s]).map(s => ({key: s, label: s, count: counts[s]}))
-  );
-  el.innerHTML = all
-    .map(f => `<div class="filter${active === f.key ? " on" : ""}" data-filter="${f.key}">${escapeHtml(f.label)}<span class="n">${f.count}</span></div>`)
-    .join("");
-  el.querySelectorAll(".filter").forEach(b => {
-    b.onclick = () => renderAll(b.dataset.filter);
+let activeCategory = "all";
+
+function renderCatNav() {
+  const nav = document.getElementById("catNav");
+  const counts = {};
+  PROJECTS.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
+
+  const buttons = [{ key: "all", label: "All", icon: "", count: PROJECTS.length }];
+  CAT_ORDER.forEach(cat => {
+    if (counts[cat]) {
+      const c = CATEGORIES[cat];
+      buttons.push({ key: cat, label: c.label, icon: c.icon, count: counts[cat] });
+    }
+  });
+
+  nav.innerHTML = buttons.map(b =>
+    `<div class="cat-nav-btn${activeCategory === b.key ? " on" : ""}" data-cat="${b.key}">` +
+      (b.icon ? `<span class="cat-icon">${b.icon}</span>` : "") +
+      `${escapeHtml(b.label)}<span class="n">${b.count}</span>` +
+    `</div>`
+  ).join("");
+
+  nav.querySelectorAll(".cat-nav-btn").forEach(btn => {
+    btn.onclick = () => {
+      activeCategory = btn.dataset.cat;
+      renderCatNav();
+      renderSections();
+    };
   });
 }
 
-function renderGrid(filter) {
-  const grid = document.getElementById("grid");
-  const sorted = [...PROJECTS].sort((a, b) => {
-    const oi = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
-    if (oi !== 0) return oi;
-    return (b.updated || "").localeCompare(a.updated || "");
+function renderCard(p) {
+  const stack = (p.stack || []).map(s => `<span>${escapeHtml(s)}</span>`).join("");
+  const next = p.next ? `<div class="next">${escapeHtml(p.next)}</div>` : "";
+  const link = p.url
+    ? `<a class="visit" href="${p.url}" target="_blank" rel="noopener">Visit ${ICONS.external}</a>`
+    : `<span class="visit" style="color:var(--muted)">Not live yet</span>`;
+  const titleEl = p.url
+    ? `<a href="${p.url}" target="_blank" rel="noopener">${escapeHtml(p.name)}</a>`
+    : escapeHtml(p.name);
+  return `
+    <div class="pcard">
+      <span class="status ${escapeHtml(p.status)}">${escapeHtml(p.status)}</span>
+      <h3>${titleEl}</h3>
+      <div class="desc">${escapeHtml(p.description)}</div>
+      <div class="stack">${stack}</div>
+      ${next}
+      <div class="foot">
+        <span class="updated">updated ${escapeHtml(p.updated || "\u2014")}</span>
+        ${link}
+      </div>
+    </div>
+  `;
+}
+
+function renderSections() {
+  const container = document.getElementById("sections");
+  const filtered = activeCategory === "all"
+    ? PROJECTS
+    : PROJECTS.filter(p => p.category === activeCategory);
+
+  // Group by category
+  const grouped = {};
+  filtered.forEach(p => {
+    if (!grouped[p.category]) grouped[p.category] = [];
+    grouped[p.category].push(p);
   });
-  const list = filter === "all" ? sorted : sorted.filter(p => p.status === filter);
-  grid.innerHTML = list.map(p => {
-    const stack = (p.stack || []).map(s => `<span>${escapeHtml(s)}</span>`).join("");
-    const next = p.next ? `<div class="next">${escapeHtml(p.next)}</div>` : "";
-    const link = p.url
-      ? `<a class="visit" href="${p.url}" target="_blank" rel="noopener">Visit ${ICONS.external}</a>`
-      : `<span class="visit" style="color:var(--muted)">Not live yet</span>`;
-    const titleEl = p.url
-      ? `<a href="${p.url}" target="_blank" rel="noopener">${escapeHtml(p.name)}</a>`
-      : escapeHtml(p.name);
-    return `
-      <div class="pcard">
-        <span class="status ${escapeHtml(p.status)}">${escapeHtml(p.status)}</span>
-        <h3>${titleEl}</h3>
-        <div class="desc">${escapeHtml(p.description)}</div>
-        <div class="stack">${stack}</div>
-        ${next}
-        <div class="foot">
-          <span class="updated">updated ${escapeHtml(p.updated || "—")}</span>
-          ${link}
+
+  // Sort projects within each group by status then date
+  Object.values(grouped).forEach(list => {
+    list.sort((a, b) => {
+      const si = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
+      if (si !== 0) return si;
+      return (b.updated || "").localeCompare(a.updated || "");
+    });
+  });
+
+  // Render in category order
+  let html = "";
+  CAT_ORDER.forEach(cat => {
+    if (!grouped[cat]) return;
+    const c = CATEGORIES[cat] || { label: cat, icon: "", desc: "" };
+    const projects = grouped[cat];
+    html += `
+      <div class="cat-section">
+        <div class="cat-header">
+          <div class="cat-emoji ${escapeHtml(cat)}">${c.icon}</div>
+          <div class="cat-info">
+            <h2>${escapeHtml(c.label)}</h2>
+            <div class="cat-desc">${escapeHtml(c.desc)}</div>
+          </div>
+          <div class="cat-count">${projects.length} project${projects.length > 1 ? "s" : ""}</div>
+        </div>
+        <div class="grid">
+          ${projects.map(renderCard).join("")}
         </div>
       </div>
     `;
-  }).join("");
-  document.getElementById("count").textContent = `${list.length} of ${PROJECTS.length}`;
-}
+  });
 
-function renderAll(filter = "all") {
-  const counts = {};
-  PROJECTS.forEach(p => { counts[p.status] = (counts[p.status] || 0) + 1; });
-  renderFilters(filter, counts);
-  renderGrid(filter);
+  container.innerHTML = html;
 }
 
 function renderMeta() {
-  const latest = PROJECTS
-    .map(p => p.updated)
-    .filter(Boolean)
-    .sort()
-    .pop();
-  document.getElementById("lastUpdated").textContent = latest || "—";
-  document.title = `${ME.name} — Projects`;
+  const latest = PROJECTS.map(p => p.updated).filter(Boolean).sort().pop();
+  document.getElementById("lastUpdated").textContent = latest || "\u2014";
+  document.title = `${ME.name} \u2014 Projects`;
 }
 
 renderLinks();
-renderAll();
+renderCatNav();
+renderSections();
 renderMeta();
 </script>
 </body>
